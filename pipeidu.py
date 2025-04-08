@@ -41,9 +41,9 @@ def main():
                     if score > best_score:
                         best_score = score
                         best_match = {
-                            f"{column1}": value1,
-                            f"{column2}": value2,
-                            f"{mapping_column}": df2.loc[idx, mapping_column],
+                            f"文件1_{column1}": value1,
+                            f"文件2_{column2}": value2,
+                            f"文件2_{mapping_column}": df2.loc[idx, mapping_column],
                             "匹配度": score
                         }
                 final_matches.append(best_match)
