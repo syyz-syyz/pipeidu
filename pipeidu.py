@@ -37,7 +37,10 @@ def main():
                 best_match = None
                 best_score = 0
                 for idx, value2 in df2[column2].items():
-                    score = fuzz.ratio(str(value1), str(value2))
+                    # 去除字符串中的空格
+                    clean_value1 = str(value1).replace(" ", "")
+                    clean_value2 = str(value2).replace(" ", "")
+                    score = fuzz.ratio(clean_value1, clean_value2)
                     if score > best_score:
                         best_score = score
                         best_match = {
