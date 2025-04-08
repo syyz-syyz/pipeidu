@@ -32,26 +32,27 @@ def main():
         mapping_column = st.selectbox("选择第二个文件的映射列", df2.columns)
 
         if st.button("比较数据"):
-            # 进行模糊匹配
-            matches = []
+            final_matches = []
             for value1 in df1[column1]:
+                best_match = None
+                best_score = 0
                 for idx, value2 in df2[column2].items():
                     score = fuzz.ratio(str(value1), str(value2))
-                    matches.append({
-                        f"{column1}": value1,
-                        f"{column2}": value2,
-                        f"{mapping_column}": df2.loc[idx, mapping_column],
-                        "匹配度": score
-                    })
+                    if score > best_score:
+                        best_score = score
+                        best_match = {
+                            f"{column1}": value1,
+                            f"{column2}": value2,
+                            f"{mapping_column}": df2.loc[idx, mapping_column],
+                            "匹配度": score
+                        }
+                final_matches.append(best_match)
 
             # 创建结果 DataFrame
-            result_df = pd.DataFrame(matches)
+            result_df = pd.DataFrame(final_matches)
 
-            # 按匹配度排序
-            result_df = result_df.sort_values(by="匹配度", ascending=False)
-
-            # 显示前 10 行，不显示索引
-            st.dataframe(result_df.head(10).reset_index(drop=True))
+            # 显示结果，不显示索引
+            st.dataframe(result_df.reset_index(drop=True))
 
             # 提供导出功能
             csv = result_df.to_csv(sep='\t', na_rep='nan')
