@@ -50,8 +50,18 @@ def main():
             # 按匹配度排序
             result_df = result_df.sort_values(by="匹配度", ascending=False)
 
-            # 显示前 10 行
-            st.dataframe(result_df.head(10))
+            # 显示前 10 行，不显示索引
+            st.dataframe(result_df.head(10).reset_index(drop=True))
+
+            # 提供导出功能
+            csv = result_df.to_csv(sep='\t', na_rep='nan')
+            st.download_button(
+                label="导出结果为 CSV",
+                data=csv,
+                file_name='comparison_result.csv',
+                mime='text/csv',
+            )
 
 if __name__ == "__main__":
-    main()    
+    main()
+    
