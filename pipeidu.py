@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 from thefuzz import fuzz
+import io
+
 
 def main():
     st.title("文件数据比较与匹配")
@@ -58,13 +60,18 @@ def main():
             st.dataframe(result_df.reset_index(drop=True))
 
             # 提供导出功能
-            csv = result_df.to_csv(sep='\t', na_rep='nan')
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                result_df.to_excel(writer, index=False)
+            output.seek(0)
+
             st.download_button(
-                label="导出结果为 CSV",
-                data=csv,
-                file_name='comparison_result.csv',
-                mime='text/csv',
+                label="导出结果为 Excel",
+                data=output,
+                file_name='comparison_result.xlsx',
+                mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             )
+
 
 if __name__ == "__main__":
     main()
