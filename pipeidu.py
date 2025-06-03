@@ -35,19 +35,18 @@ def main():
 
         if st.button("比较数据"):
             final_matches = []
-            # 定义默认字段（未匹配时返回空值或0，可根据需求调整）
-            default_fields = {
-                f"文件1_{column1}": None,
-                f"文件2_{column2}": None,
-                f"文件2_{mapping_column}": None,
-                "匹配度": 0  # 未匹配时匹配度设为0
-            }
-
+            
+            # 遍历第一个文件的每一行，确保结果与原数据一一对应
             for value1 in df1[column1]:
-                current_match = default_fields.copy()  # 初始化默认值
-                current_match[f"文件1_{column1}"] = value1  # 填充文件1的原始值
-                best_score = 0  # 初始匹配度为0
-
+                best_match = {
+                    f"文件1_{column1}": value1,
+                    f"文件2_{column2}": None,
+                    f"文件2_{mapping_column}": None,
+                    "匹配度": 0  # 默认匹配度为0
+                }
+                best_score = 0
+                
+                # 在第二个文件中查找最佳匹配
                 for idx, value2 in df2[column2].items():
                     clean_value1 = str(value1).replace(" ", "")
                     clean_value2 = str(value2).replace(" ", "")
@@ -55,15 +54,16 @@ def main():
                     
                     if score > best_score:
                         best_score = score
-                        current_match.update({  # 更新匹配到的字段
+                        best_match = {
+                            f"文件1_{column1}": value1,
                             f"文件2_{column2}": value2,
                             f"文件2_{mapping_column}": df2.loc[idx, mapping_column],
                             "匹配度": score
-                        })
-
-                final_matches.append(current_match)  # 无论是否匹配，都添加默认值记录
-
-            # 创建结果 DataFrame（包含所有记录，未匹配的字段为None，匹配度为0）
+                        }
+                
+                final_matches.append(best_match)
+            
+            # 创建结果 DataFrame（行数与文件1的所选列完全一致）
             result_df = pd.DataFrame(final_matches)
 
             # 显示结果，不显示索引
