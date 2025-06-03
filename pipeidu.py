@@ -34,41 +34,76 @@ def main():
         mapping_column = st.selectbox("选择第二个文件的映射列", df2.columns)
 
         if st.button("比较数据"):
+            # 创建与df1等长的结果列表
             final_matches = []
             
-            # 遍历第一个文件的每一行，确保结果与原数据一一对应
-            for value1 in df1[column1]:
-                best_match = {
+            # 确保df2的匹配列非空
+            df2_valid = df2[df2[column2].notna()].copy()
+            
+            # 遍历df1的每一行
+            for idx, row in df1.iterrows():
+                value1 = row[column1]
+                clean_value1 = str(value1).replace(" ", "")
+                
+                # 初始化匹配结果（默认匹配度0）
+                match_result = {
                     f"文件1_{column1}": value1,
                     f"文件2_{column2}": None,
                     f"文件2_{mapping_column}": None,
-                    "匹配度": 0  # 默认匹配度为0
+                    "匹配度": 0
                 }
-                best_score = 0
                 
-                # 在第二个文件中查找最佳匹配
-                for idx, value2 in df2[column2].items():
-                    clean_value1 = str(value1).replace(" ", "")
+                # 如果df2_valid为空，直接添加默认结果
+                if df2_valid.empty:
+                    final_matches.append(match_result)
+                    continue
+                
+                # 计算与df2中所有值的匹配度
+                scores = []
+                for _, row2 in df2_valid.iterrows():
+                    value2 = row2[column2]
                     clean_value2 = str(value2).replace(" ", "")
-                    score = fuzz.ratio(clean_value1, clean_value2)
                     
-                    if score > best_score:
-                        best_score = score
-                        best_match = {
-                            f"文件1_{column1}": value1,
-                            f"文件2_{column2}": value2,
-                            f"文件2_{mapping_column}": df2.loc[idx, mapping_column],
-                            "匹配度": score
-                        }
+                    # 计算相似度
+                    score = fuzz.ratio(clean_value1, clean_value2)
+                    scores.append((score, row2[column2], row2[mapping_column]))
                 
-                final_matches.append(best_match)
+                # 获取最高匹配度
+                if scores:
+                    best_score, best_value2, best_mapping = max(scores, key=lambda x: x[0])
+                    
+                    # 如果有匹配（分数大于0），更新结果
+                    if best_score > 0:
+                        match_result.update({
+                            f"文件2_{column2}": best_value2,
+                            f"文件2_{mapping_column}": best_mapping,
+                            "匹配度": best_score
+                        })
+                
+                # 无论是否匹配成功，都添加到结果列表
+                final_matches.append(match_result)
             
-            # 创建结果 DataFrame（行数与文件1的所选列完全一致）
+            # 创建结果DataFrame
             result_df = pd.DataFrame(final_matches)
-
-            # 显示结果，不显示索引
-            st.dataframe(result_df.reset_index(drop=True))
-
+            
+            # 显示统计信息
+            total_records = len(result_df)
+            matched_records = len(result_df[result_df['匹配度'] > 0])
+            unmatched_records = total_records - matched_records
+            
+            st.write(f"总记录数: {total_records}")
+            st.write(f"匹配成功: {matched_records}")
+            st.write(f"匹配失败: {unmatched_records}")
+            
+            # 确保所有列显示（特别是匹配度为0的行）
+            st.write("### 匹配结果详情")
+            
+            # 使用st.dataframe并设置height参数，确保所有行可见
+            st.dataframe(
+                result_df.reset_index(drop=True),
+                height=min(600, total_records * 35)  # 根据记录数动态调整高度
+            )
+            
             # 提供导出功能
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
