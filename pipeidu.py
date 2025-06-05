@@ -36,6 +36,10 @@ def main():
         column2 = st.selectbox("选择第二个文件用于匹配的列", df2.columns)
         mapping_column = st.selectbox("选择第二个文件的映射列", df2.columns)
         
+        # 初始化高级模式变量
+        advanced_column1 = None
+        advanced_column2 = None
+        
         # 高级模式下的额外选项
         if mode == "高级模式":
             st.subheader("高级筛选设置")
@@ -56,11 +60,11 @@ def main():
                 common_chars = ""
                 
                 # 获取当前行的筛选列值（高级模式）
-                current_advanced_value1 = df1.loc[i, advanced_column1] if mode == "高级模式" else None
+                current_advanced_value1 = df1.loc[i, advanced_column1] if (mode == "高级模式" and advanced_column1 is not None) else None
                 
                 for idx, value2 in df2[column2].items():
                     # 高级模式下的筛选条件
-                    if mode == "高级模式":
+                    if mode == "高级模式" and advanced_column1 is not None and advanced_column2 is not None:
                         current_advanced_value2 = df2.loc[idx, advanced_column2]
                         # 如果筛选列的值不匹配，则跳过此行
                         if current_advanced_value1 != current_advanced_value2:
@@ -84,8 +88,8 @@ def main():
                             f"文件2_{mapping_column}": df2.loc[idx, mapping_column],
                             "匹配度": score,
                             "相同字符": current_common,
-                            f"筛选_{advanced_column1}": current_advanced_value1 if mode == "高级模式" else "",
-                            f"筛选_{advanced_column2}": current_advanced_value2 if mode == "高级模式" else ""
+                            f"筛选_{advanced_column1}" if advanced_column1 is not None else "筛选_未选择列": current_advanced_value1 if mode == "高级模式" else "",
+                            f"筛选_{advanced_column2}" if advanced_column2 is not None else "筛选_未选择列": current_advanced_value2 if (mode == "高级模式" and current_advanced_value1 is not None) else ""
                         }
                 
                 # 只添加非空的匹配结果
@@ -99,8 +103,8 @@ def main():
                         f"文件2_{mapping_column}": None,
                         "匹配度": 0,
                         "相同字符": "",
-                        f"筛选_{advanced_column1}": current_advanced_value1 if mode == "高级模式" else "",
-                        f"筛选_{advanced_column2}": "" if mode == "高级模式" else ""
+                        f"筛选_{advanced_column1}" if advanced_column1 is not None else "筛选_未选择列": current_advanced_value1 if mode == "高级模式" else "",
+                        f"筛选_{advanced_column2}" if advanced_column2 is not None else "筛选_未选择列": "" if mode == "高级模式" else ""
                     })
                 
                 # 更新进度条
