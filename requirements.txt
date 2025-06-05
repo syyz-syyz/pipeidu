@@ -2,4 +2,3 @@ streamlit
 pandas
 thefuzz
 openpyxl
-io
